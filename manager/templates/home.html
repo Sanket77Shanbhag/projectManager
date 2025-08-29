@@ -1,0 +1,2404 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAL Project Management</title>
+  <style>
+    
+    :root {
+      --primary: #6C5CE7;  /* Electric purple */
+      --secondary: #00CEC9; /* Turquoise */
+      --accent: #FD79A8;   /* Pink */
+      --dark: #2D3436;     /* Dark gray */
+      --light: #F5F6FA;    /* Light gray */
+      --success: #00B894;  /* Mint */
+      --warning: #FDCB6E;  /* Yellow */
+      --danger: #E17055;   /* Coral */
+      --border-color: #e0e0e0;
+      --card-bg: #ffffff;
+      --text-light: #718096;
+    }
+
+    /* Base Styles with Creative Touches */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    .close-modal {
+      position: absolute;
+      right: 25px;
+      top: 25px;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--dark);
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .close-modal:hover {
+      color: var(--accent);
+      background-color: rgba(253, 121, 168, 0.1); /* var(--accent) */
+      transform: rotate(90deg);
+    }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #dfe6e9 100%);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* Glowing Effect */
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px rgba(108, 92, 231, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(108, 92, 231, 0.8); }
+      100% { box-shadow: 0 0 5px rgba(108, 92, 231, 0.5); }
+    }
+    .project-images, .project-videos {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+    }
+    
+    .images-title, .videos-title {
+        color: var(--primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .image-gallery, .video-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .image-item, .video-item {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .project-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+    
+    .project-video {
+        width: 100%;
+        height: auto;
+    }
+    
+    .image-caption, .video-caption {
+        padding: 8px;
+        margin: 0;
+        font-size: 0.9em;
+        color: var(--text-light);
+        background-color: var(--sidebar-bg);
+    }
+    /* Layout */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Neon Sidebar */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, var(--primary) 0%, #7B6FEA 100%);
+      padding: 30px 0;
+      box-shadow: 4px 0 20px rgba(108, 92, 231, 0.3);
+      position: relative;
+      z-index: 10;
+    }
+    
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -5px;
+      height: 100%;
+      width: 5px;
+      background: var(--accent);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Logo with Neon Text */
+    .logo {
+      padding: 0 30px 30px;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 30px;
+    }
+
+    /* Navigation Items with Hover Effects */
+    .nav-item {
+      padding: 15px 30px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      color: rgba(255,255,255,0.8);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: -100%;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: all 0.6s ease;
+    }
+
+    .nav-item:hover::before {
+      left: 100%;
+    }
+    /* Enhanced Modal Styles */
+    .project-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .project-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(45, 52, 54, 0.8);
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+    }
+
+    .modal-content {
+      position: relative;
+      background: white;
+      margin: auto;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+      z-index: 1001;
+    }
+
+    .project-modal.show .modal-content {
+      transform: translateY(0);
+    }
+
+    /* Header Styles */
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .project-title-wrapper {
+      flex: 1;
+    }
+
+    .modal-header h2 {
+      margin: 0 0 5px 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .pb-number {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .no-images, .no-videos{
+      color: var(--text-light);
+      font-style: italic;
+      padding: 1rem;
+      text-align: center;
+    }
+    .project-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      margin-left: 15px;
+    }
+
+    /* Detail Rows */
+    .project-details {
+      padding: 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: flex-start;
+    }
+
+    .detail-row.full-width {
+      flex-direction: column;
+    }
+
+    .detail-icon {
+      margin-right: 12px;
+      color: var(--primary);
+      min-width: 20px;
+      text-align: center;
+      margin-top: 3px;
+    }
+
+    .highlight-text {
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .division-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background-color: rgba(0, 206, 201, 0.1);
+      color: var(--secondary);
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .description-text, .benefits-text {
+      margin-top: 8px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    /* Tools Styling */
+    .tools-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .tool-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      background-color: rgba(108, 92, 231, 0.1);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(108, 92, 231, 0.2);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-badge.approved {
+      background-color: rgba(0, 184, 148, 0.1);
+      color: var(--success);
+    }
+
+    .status-badge.pending {
+      background-color: rgba(253, 203, 110, 0.1);
+      color: var(--warning);
+    }
+
+    /* File Section Styles */
+    .project-files, .project-images, .project-videos {
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .files-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      color: var(--dark);
+    }
+
+    .files-title i {
+      margin-right: 10px;
+      color: var(--primary);
+    }
+
+    .file-count {
+      margin-left: 8px;
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .file-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .file-card {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      border-left: 4px solid var(--secondary);
+      transition: all 0.3s ease;
+    }
+
+    .file-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border-left-color: var(--accent);
+    }
+
+    .file-icon-container {
+      margin-right: 12px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: rgba(108, 92, 231, 0.1);
+      color: var(--primary);
+    }
+
+    .file-icon {
+      font-size: 16px;
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+
+    .file-meta {
+      display: flex;
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    .file-type {
+      margin-left: 8px;
+      padding-left: 8px;
+      border-left: 1px solid #ddd;
+    }
+
+    .download-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(0, 206, 201, 0.1);
+      color: var(--secondary);
+      transition: all 0.3s ease;
+    }
+
+    .download-btn:hover {
+      background: var(--secondary);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    /* No Files State */
+    .no-files {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+    }
+
+    .no-files i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #ddd;
+    }
+
+    .no-files p {
+      margin: 0;
+    }
+
+    /* Footer Styles */
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-action-btn {
+      padding: 8px 15px;
+      border-radius: 20px;
+      background: rgba(108, 92, 231, 0.1);
+      color: var(--primary);
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-action-btn i {
+      font-size: 0.9rem;
+    }
+
+    .modal-action-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .modal-content {
+        width: 95%;
+      }
+      
+      .file-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      .detail-row {
+        flex-direction: column;
+        gap: 5px;
+      }
+      
+      .detail-icon {
+        margin-right: 0;
+        margin-bottom: 5px;
+      }
+      
+      .project-meta {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+    .nav-item:hover, .nav-item.active {
+      color: white;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .nav-item i {
+      margin-right: 15px;
+      font-size: 1.2rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav-item.active {
+      border-left: 4px solid var(--accent);
+    }
+
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      color: var(--dark);
+      position: relative;
+      display: inline-block;
+    }
+
+    .header h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .user-profile {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+        margin-left: auto;
+        margin-right: 20px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .user-name {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .user-role {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        white-space: nowrap;
+    }
+
+    .profile-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        padding: 1rem;
+        width: 280px;
+        display: none;
+        z-index: 10;
+    }
+
+    .profile-dropdown.active {
+        display: block;
+    }
+
+    .profile-info p {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .profile-info p strong {
+        color: var(--primary);
+    }
+
+    .logout-btn {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        background: var(--light);
+        border: none;
+        border-radius: 6px;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .logout-btn:hover {
+        background: rgba(110,72,170,0.1);
+    }
+
+    /* Neon Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      z-index: 1;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      z-index: -1;
+      transition: opacity 0.3s ease;
+      opacity: 1;
+    }
+    .btn a{
+      color: inherit;
+      text-decoration: none;
+    }
+    .btn:hover::before {
+      opacity: 0.8;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: white;
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6);
+    }
+
+    /* Analytics Cards with Hover Effects */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--primary), var(--accent));
+    }
+
+    .card h3 {
+      font-size: 0.95rem;
+      color: var(--secondary);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card .value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 5px;
+    }
+
+    .card .trend {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .trend.up {
+      color: var(--success);
+    }
+
+    .trend.down {
+      color: var(--danger);
+    }
+
+    /* Projects Table with Interactive Elements */
+    .projects-table {
+      width: 100%;
+      background: white;
+      border-radius: 15px;
+      align-items: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: fadeIn 0.8s ease;
+    }
+    .projects-table2 {
+      width: 100%;
+      background: white;
+      border-radius: 15px;
+      align-items: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: fadeIn 0.8s ease;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 18px 25px;
+      text-align: left;
+    }
+
+    thead {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    th {
+      font-weight: 600;
+      color: white;
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.85rem;
+    }
+
+    th .filter {
+      margin-left: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    th .filter:hover {
+      transform: scale(1.2);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: rgba(108, 92, 231, 0.03);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .status-approved {
+      background-color: rgba(0, 184, 148, 0.1);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .status-pending {
+      background-color: rgba(253, 203, 110, 0.1);
+      color: #d68910;
+      border: 1px solid #d68910;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--primary);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .action-btn:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+    }
+
+    /* Filter Dropdown */
+    .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 150px;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(110,72,170,0.1);
+    }
+    .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+        margin-right: 1rem;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-light);
+    }
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(110,72,170,0.1);
+    }
+    .filter-dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 10px 0;
+      z-index: 100;
+      min-width: 180px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .filter-dropdown.show {
+      display: block;
+    }
+
+    .filter-dropdown a {
+      display: block;
+      padding: 10px 20px;
+      color: var(--dark);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 0.85rem;
+    }
+
+    .filter-dropdown a:hover {
+      background: rgba(108, 92, 231, 0.1);
+      color: var(--primary);
+      padding-left: 25px;
+    }
+
+    /* Section Management */
+    .section {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(45, 52, 54, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Add Project Form */
+    .add-project-form {
+      background: white;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 40px;
+      position: relative;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-overlay.active .add-project-form {
+      transform: translateY(0);
+    }
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .form-header h2 {
+      font-size: 1.8rem;
+      color: var(--primary);
+      position: relative;
+    }
+
+    .form-header h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--secondary);
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      transform: rotate(90deg);
+      color: var(--accent);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .required::after {
+      content: '*';
+      color: var(--accent);
+      margin-left: 4px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* File Upload Styling */
+    .file-upload {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-upload-btn {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-upload-btn:hover {
+      border-color: var(--primary);
+      background: rgba(108, 92, 231, 0.05);
+    }
+
+    .file-upload-input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-upload-icon {
+      font-size: 2.5rem;
+      color: var(--secondary);
+      margin-bottom: 10px;
+    }
+
+    .file-upload-text {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+
+    .file-upload-hint {
+      font-size: 0.8rem;
+      color: #777;
+      margin-top: 5px;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 30px;
+      grid-column: span 2;
+    }
+
+    .btn-cancel {
+      background: var(--light);
+      color: var(--dark);
+    }
+
+    .btn-submit {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Preview of Selected Files */
+    .file-preview-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .file-preview {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .file-preview img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      margin-bottom: 8px;
+    }
+
+    .file-name {
+      font-size: 0.7rem;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .remove-file {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 20px;
+      height: 20px;
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      cursor: pointer;
+      border: none;
+    }
+    .uploaded-files-container {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .file-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .file-card {
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .file-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .file-name {
+      font-weight: bold;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .file-size {
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .download-btn {
+      margin-top: 8px;
+      padding: 5px 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+      .form-actions {
+        grid-column: span 1;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="logo">HAL Project Management</div>
+      <div class="nav-item active" data-section="dashboard">
+        <i class="fas fa-chart-pie"></i> Dashboard
+      </div>
+      <div class="nav-item" data-section="approved-projects">
+        <i class="fas fa-check-circle"></i> Approved Projects
+      </div>
+      {% if user.role == 'admin' %}
+        <div class="nav-item" data-section="pending-projects">
+          <i class="fas fa-clock"></i> Pending Projects
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Dashboard Section -->
+      <div class="section active" id="dashboard">
+        <div class="header">
+          <h1>Project Dashboard</h1>
+          {% if user %}
+            <div class="user-profile" id="profileToggle">
+              <div class="user-avatar">{{ user.name|slice:":1"|upper }}</div>
+              <div>
+                  <div class="user-name">{{ user.name }}</div>
+                  <div class="user-role">{{user.role}}</div>
+              </div>
+              <i class="fas fa-chevron-down ml-2" style="font-size: 0.8rem;"></i>
+              <div class="profile-dropdown" id="profileDropdown">
+                  <div class="profile-info">
+                      <p><strong>PB Number:</strong> {{ user.pb_number }}</p>
+                      <p><strong>Name:</strong> {{ user.name }}</p>
+                      <p><strong>Gender:</strong> {{ user.gender }}</p>
+                      <p><strong>Role:</strong> {{ user.role }}</p>
+                          <p><strong>Phone:</strong> {{ user.phone|default:'N/A' }}</p>
+                          <p><strong>Email ID:</strong> {{ user.email|default:'N/A' }}</p>
+                      <p><strong>Division:</strong> {{ user.division|default:"N/A" }}</p>
+                      <p><strong>Department:</strong> {{ user.department|default:"N/A" }}</p>
+                  </div>
+                  <a href="{% url 'logout' %}" class="logout-btn">
+                      <i class="fas fa-sign-out-alt"></i> Logout
+                  </a>
+              </div>
+            </div>
+          {% else %}
+            <div>
+              <button class="btn btn-primary" id="sign-in-btn"><a href="{% url 'signin' %}">
+                <i class="fas fa-sign-in"></i> Sign In </a>
+              </button>
+              <button class="btn btn-primary" id="sign-up-btn"><a href="{% url 'signup' %}">
+                <i class="fas fa-user-circle"></i> Sign Up </a>
+              </button>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Analytics Cards -->
+        <div class="analytics-grid">
+          <div class="card">
+            <h3>Total Projects</h3>
+            <div class="value">{{projects|length}}</div>
+          </div>
+          <div class="card">
+            <h3>Approved</h3>
+            <div class="value">{{approved|length}}</div>
+          </div>
+          <div class="card">
+            <h3>Pending</h3>
+            <div class="value">{{pending|length}}</div>
+          </div>
+        </div>
+
+        <!-- Project Timeline Visualization -->
+        <div class="card" style="padding: 30px;">
+          <h3 style="margin-bottom: 20px;">Project Timeline</h3>
+          <div style="height: 300px; background: #f9f9f9; border-radius: 8px; 
+              display: flex; align-items: center; justify-content: center; color: #999;
+              background: linear-gradient(45deg, #f5f7fa, #dfe6e9);">
+            <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--secondary); opacity: 0.3;"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approved Projects Section -->
+      <div class="section" id="approved-projects">
+        <div class="header">
+          <h1>Approved Projects</h1>
+          <div>
+            {% if user %}
+              <button class="btn btn-primary" id="add-project-btn">
+                <i class="fas fa-plus"></i> Add Project
+              </button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" placeholder="Search projects..." id="projectSearchInput" onkeyup="filterProjects()">
+            </div>
+            
+            <div class="filter-group">
+                <select class="form-select" id="projectCategoryFilter" onchange="filterProjects()">
+                    <option value="all">All Categories</option>
+                    <option value="AR or VR and Remote Assistance">AR or VR and Remote Assistance</option>
+                    <option value="Automation and Robotics">Automation and Robotics</option>
+                    <option value="Cyber security and IT infrastructure">Cyber security and IT infrastructure</option>
+                    <option value="Data Analytics and Predictive Maintenance">Data Analytics and Predictive Maintenance</option>
+                    <option value="Digitization and Documentation">Digitization and Documentation</option>
+                    <option value="IMM and Supply Chain">IMM and Supply Chain</option>
+                    <option value="IoT and Connectivity">IoT and Connectivity</option>
+                    <option value="Quality Assurance and Smart Inspection">Quality Assurance and Smart Inspection</option>
+                </select>
+                <select class="form-select" id="divisionFilter" onchange="filterProjects()">
+                    <option value="all">All Divisions</option>
+                    <option value="AEROSPACE DIVISION">AEROSPACE DIVISION</option>
+                    <option value="AIRCRAFT">AIRCRAFT</option>
+                    <option value="AIRCRAFT OVERHAUL DIVISION NASIK">AIRCRAFT OVERHAUL DIVISION NASIK</option>
+                    <option value="ARDC">ARDC</option>
+                    <option value="AVIONICS DIVISION,KORWA">AVIONICS DIVISION,KORWA</option>
+                    <option value="BARRACKPORE DIVISION">BARRACKPORE DIVISION</option>
+                    <option value="ENGINE DIVISION">ENGINE DIVISION</option>
+                    <option value="FOUNDRY AND FORGE">FOUNDRY AND FORGE</option>
+                    <option value="HAL TAD KANPUR">HAL TAD KANPUR</option>
+                    <option value="HAL-AERDC">HAL-AERDC</option>
+                    <option value="HELICOPTER">HELICOPTER</option>
+                    <option value="HELICOPTER DIVISION TUMAKURU">HELICOPTER DIVISION TUMAKURU</option>
+                    <option value="HELIMRO">HELIMRO</option>
+                    <option value="HYDERABAD">HYDERABAD</option>
+                    <option value="KORAPUT">KORAPUT</option>
+                    <option value="LCA TEJAS DIVISION">LCA TEJAS DIVISION</option>
+                    <option value="LUCKNOW">LUCKNOW</option>
+                    <option value="MANUFACTURING DIVISION NASIK">MANUFACTURING DIVISION NASIK</option>
+                    <option value="OVERHAUL">OVERHAUL</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="projects-table">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  Project Name
+                </th>
+                <th>
+                  Date
+                </th>
+                <th>
+                  Category
+                </th>
+                <th>
+                  Division
+                </th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for project in projects %}
+                {% if project.status != 'pending' %}
+                  <tr>
+                    <td>{{ project.project_name }}</td>
+                    <td>{{ project.start_date|date:"d M Y" }} - {{project.end_date|date:"d M Y"}}</td>
+                    <td>{{ project.category }}</td>
+                    <td>{{ project.division }}</td>
+                    <td><button class="action-btn view-project-btn" data-project-id="{{ project.project_id }}">View</button></td>
+                  </tr>
+                  <!-- Project details modal (hidden by default) -->
+                  <div class="project-modal" id="project-modal-{{ project.project_id }}">
+                    <div class="modal-overlay" data-project-id="{{ project.project_id }}"></div>
+                    <div class="modal-content">
+                      <span class="close-modal" data-project-id="{{ project.project_id }}">
+                        <i class="fas fa-times"></i>
+                      </span>
+                      
+                      <div class="modal-header">
+                        <div class="project-title-wrapper">
+                          <h2>{{ project.project_name }}</h2>
+                          <div class="project-meta">
+                            <span class="pb-number">PB: {{ project.pb_number }}</span>
+                            <span class="submit-date">Submitted: {{ project.submitted_date|date:"d M Y" }}</span>
+                          </div>
+                        </div>
+                        <div class="project-badge" style="background-color: {% cycle '#6C5CE7' '#00CEC9' '#FD79A8' '#00B894' as badgecolors %};">
+                          {{ project.category }}
+                        </div>
+                      </div>
+                      
+                      <div class="project-details">
+                        <div class="detail-row">
+                          <i class="fas fa-user detail-icon"></i>
+                          <div>
+                            <strong>Developer:</strong> 
+                            <span class="highlight-text">{{ project.name }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-calendar-alt detail-icon"></i>
+                          <div>
+                            <strong>Duration:</strong> 
+                            <span class="highlight-text">{{ project.start_date|date:"d M Y" }} - {{ project.end_date|date:"d M Y" }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-mobile-alt detail-icon"></i>
+                          <div>
+                            <strong>Division:</strong> 
+                            <span class="division-badge">{{ project.division }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-info-circle detail-icon"></i>
+                            <strong>Description:</strong> 
+                          </div>
+                            <p class="description-text">{{ project.description }}</p>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-tools detail-icon"></i>
+                            <strong>Tools Used:</strong> 
+                          </div>
+                          <div class="tools-container">
+                            {% for tool in project.tools_used %}
+                            <span class="tool-pill">{{ tool }}</span>
+                            {% endfor %}
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-star detail-icon"></i>
+                            <strong>Benefits:</strong> 
+                          </div>
+                          <div>
+                            <p class="benefits-text">{{ project.benefits }}</p>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-check-circle detail-icon"></i>
+                          <div>
+                            <strong>Status:</strong> 
+                            <span class="status-badge {% if project.status == 'approved' %}approved{% else %}pending{% endif %}">
+                              {{ project.status|title }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {% if project.files %}
+                        {# Images Section #}
+                        <div class="project-images">
+                            <h3 class="images-title">
+                                <i class="fas fa-images"></i>
+                                Project Images
+                            </h3>
+                            <div class="image-gallery">
+                                {% for file in project.files %}
+                                    {% if file.name|lower|slice:"-4:" == ".png" or file.name|lower|slice:"-4:" == ".jpg" or file.name|lower|slice:"-5:" == ".jpeg" or file.name|lower|slice:"-4:" == ".svg" or file.name|lower|slice:"-5:" == ".webp" or file.name|lower|slice:"-4:" == ".gif" %}
+                                        <div class="image-item">
+                                            <img src="{% static file.path %}" alt="{{ file.name }}" class="project-image">
+                                            <p class="image-caption">{{ file.name }}</p>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Videos Section #}
+                        <div class="project-videos">
+                            <h3 class="videos-title">
+                                <i class="fas fa-video"></i>
+                                Project Videos
+                            </h3>
+                            <div class="video-gallery">
+                                {% for file in project.files %}
+                                    {% if file.name|lower|slice:"-4:" == ".mp4" or file.name|lower|slice:"-4:" == ".avi" or file.name|lower|slice:"-4:" == ".mov" %}
+                                        <div class="video-item">
+                                            <video controls class="project-video">
+                                                <source src="{% static file.path %}" type="video/{{ file.name|slice:'-3:' }}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            <p class="video-caption">{{ file.name }}</p>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                      {% endif %}
+                      <div class="project-files">
+                        <h3 class="files-title">
+                          <i class="fas fa-paperclip"></i>
+                          Project Files
+                        </h3>
+                        {% if project.files%}
+                        <div class="file-list">
+                          {% for file in project.files %}
+                          <div class="file-card" data-file-type="{{ file.name|slice:'-3:'|lower }}">
+                            <div class="file-icon-container">
+                              <i class="fas 
+                                {% if '.pdf' in file.name|lower %}fa-file-pdf
+                                {% elif '.doc' in file.name|lower %}fa-file-word
+                                {% elif '.xls' in file.name|lower %}fa-file-excel
+                                {% elif '.zip' in file.name|lower %}fa-file-archive
+                                {% elif '.ppt' in file.name|lower or '.pptx' in file.name|lower or '.pptm' in file.name|lower %}fa-file-powerpoint
+                                {% elif '.mp4' in file.name|lower or '.avi' in file.name|lower %}fa-file-video
+                                {% elif '.mp3' in file.name|lower or '.wav' in file.name|lower %}fa-file-audio
+                                {% elif '.gif' in file.name|lower %}fa-file-image
+                                {% elif '.svg' in file.name|lower %}fa-file-image
+                                {% elif '.webp' in file.name|lower %}fa-file-image
+                                {% elif '.jpeg' in file.name|lower or '.jpg' in file.name|lower %}fa-file-image
+                                {% elif '.jpg' in file.name|lower or '.png' in file.name|lower %}fa-file-image
+                                {% else %}fa-file-alt{% endif %}
+                                file-icon">
+                              </i>
+                            </div>
+                            <div class="file-info">
+                              <div class="file-name" title="{{ file.name }}">{{ file.name|truncatechars:30 }}</div>
+                              <div class="file-meta">
+                                <span class="file-size">{{ file.size|filesizeformat }}</span>
+                                {% if '.pdf' in file.name|lower or '.jpg' in file.name|lower or '.png' in file.name|lower %}
+                                  <span class="file-type">{{ file.name|slice:'-3:'|upper }}</span>
+                                {% else %}
+                                  <span class="file-type">{{ file.name|slice:'-4:'|upper }}</span>
+                                {% endif %}
+                              </div>
+                            </div>
+                            <a href="{% static file.path %}" class="download-btn" download title="Download {{ file.name }}">
+                              <i class="fas fa-download"></i>
+                            </a>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="no-files">
+                          <i class="fas fa-folder-open"></i>
+                          <p>No files uploaded for this project</p>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+          </table>
+        </div>
+        
+      </div>
+
+      <!-- Pending Projects Section -->
+      <div class="section" id="pending-projects">
+        <div class="header">
+          <h1>Pending Projects</h1>
+        </div>
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" placeholder="Search projects..." id="projectSearchInputs" onkeyup="filterPenProjects()">
+            </div>
+            <div class="filter-group">
+                <select class="form-select" id="projectCategoryFilters" onchange="filterPenProjects()">
+                    <option value="all">All Categories</option>
+                    <option value="AR or VR and Remote Assistance">AR or VR and Remote Assistance</option>
+                    <option value="Automation and Robotics">Automation and Robotics</option>
+                    <option value="Cyber security and IT infrastructure">Cyber security and IT infrastructure</option>
+                    <option value="Data Analytics and Predictive Maintenance">Data Analytics and Predictive Maintenance</option>
+                    <option value="Digitization and Documentation">Digitization and Documentation</option>
+                    <option value="IMM and Supply Chain">IMM and Supply Chain</option>
+                    <option value="IoT and Connectivity">IoT and Connectivity</option>
+                    <option value="Quality Assurance and Smart Inspection">Quality Assurance and Smart Inspection</option>
+                </select>
+                <select class="form-select" id="divisionFilters" onchange="filterPenProjects()">
+                    <option value="all">All Divisions</option>
+                    <option value="AEROSPACE DIVISION">AEROSPACE DIVISION</option>
+                    <option value="AIRCRAFT">AIRCRAFT</option>
+                    <option value="AIRCRAFT OVERHAUL DIVISION NASIK">AIRCRAFT OVERHAUL DIVISION NASIK</option>
+                    <option value="ARDC">ARDC</option>
+                    <option value="AVIONICS DIVISION,KORWA">AVIONICS DIVISION,KORWA</option>
+                    <option value="BARRACKPORE DIVISION">BARRACKPORE DIVISION</option>
+                    <option value="ENGINE DIVISION">ENGINE DIVISION</option>
+                    <option value="FOUNDRY AND FORGE">FOUNDRY AND FORGE</option>
+                    <option value="HAL TAD KANPUR">HAL TAD KANPUR</option>
+                    <option value="HAL-AERDC">HAL-AERDC</option>
+                    <option value="HELICOPTER">HELICOPTER</option>
+                    <option value="HELICOPTER DIVISION TUMAKURU">HELICOPTER DIVISION TUMAKURU</option>
+                    <option value="HELIMRO">HELIMRO</option>
+                    <option value="HYDERABAD">HYDERABAD</option>
+                    <option value="KORAPUT">KORAPUT</option>
+                    <option value="LCA TEJAS DIVISION">LCA TEJAS DIVISION</option>
+                    <option value="LUCKNOW">LUCKNOW</option>
+                    <option value="MANUFACTURING DIVISION NASIK">MANUFACTURING DIVISION NASIK</option>
+                    <option value="OVERHAUL">OVERHAUL</option>
+                </select>
+            </div>
+        </div>
+        <div class="projects-table2">
+          <table>
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Submitted Date</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for project in projects %}
+                {% if project.status == 'pending' %}
+                  <tr>
+                    <td>{{ project.project_name }}</td>
+                    <td>{{ project.submitted_date|date:"d M Y" }}</td>
+                    <td>{{ project.category }}</td>
+                    <td>
+                      <span class="status-pending">
+                          <i class="fas fa-clock"></i> Pending
+                      </span>
+                    </td>
+                    <td>
+                      <div>
+                        <button class="action-btn view-project-btn" data-project-id="{{ project.project_id }}">View</button>
+                        <button class="btn btn-primary"  id="approve-project-btn"
+                                data-project-id="{{ project.project_id }}" 
+                                onclick="handleProjectAction(this, 'approve')">
+                            <i class="fas fa-check-circle"></i> Approve
+                        </button>
+                        <button class="btn btn-primary"  id="reject-project-btn"
+                                data-project-id="{{ project.project_id }}" 
+                                onclick="handleProjectAction(this, 'reject')">
+                            <i class="fas fa-thumbs-down"></i> Reject
+                        </button>
+
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- Project details modal (hidden by default) -->
+                  <div class="project-modal" id="project-modal-{{ project.project_id }}">
+                    <div class="modal-overlay" data-project-id="{{ project.project_id }}"></div>
+                    <div class="modal-content">
+                      <span class="close-modal" data-project-id="{{ project.project_id }}">
+                        <i class="fas fa-times"></i>
+                      </span>
+                      
+                      <div class="modal-header">
+                        <div class="project-title-wrapper">
+                          <h2>{{ project.project_name }}</h2>
+                          <div class="project-meta">
+                            <span class="pb-number">PB: {{ project.pb_number }}</span>
+                            <span class="submit-date">Submitted: {{ project.submitted_date|date:"d M Y" }}</span>
+                          </div>
+                        </div>
+                        <div class="project-badge" style="background-color: {% cycle '#6C5CE7' '#00CEC9' '#FD79A8' '#00B894' as badgecolors %};">
+                          {{ project.category }}
+                        </div>
+                      </div>
+                      
+                      <div class="project-details">
+                        <div class="detail-row">
+                          <i class="fas fa-user detail-icon"></i>
+                          <div>
+                            <strong>Developer:</strong> 
+                            <span class="highlight-text">{{ project.name }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-calendar-alt detail-icon"></i>
+                          <div>
+                            <strong>Duration:</strong> 
+                            <span class="highlight-text">{{ project.start_date|date:"d M Y" }} - {{ project.end_date|date:"d M Y" }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-mobile-alt detail-icon"></i>
+                          <div>
+                            <strong>Division:</strong> 
+                            <span class="division-badge">{{ project.division }}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-info-circle detail-icon"></i>
+                            <strong>Description:</strong> 
+                          </div>
+                            <p class="description-text">{{ project.description }}</p>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-tools detail-icon"></i>
+                            <strong>Tools Used:</strong> 
+                          </div>
+                          <div class="tools-container">
+                            {% for tool in project.tools_used %}
+                            <span class="tool-pill">{{ tool }}</span>
+                            {% endfor %}
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row full-width">
+                          <div style = "display: flex;">
+                            <i class="fas fa-star detail-icon"></i>
+                            <strong>Benefits:</strong> 
+                          </div>
+                          <div>
+                            <p class="benefits-text">{{ project.benefits }}</p>
+                          </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                          <i class="fas fa-check-circle detail-icon"></i>
+                          <div>
+                            <strong>Status:</strong> 
+                            <span class="status-badge {% if project.status == 'approved' %}approved{% else %}pending{% endif %}">
+                              {{ project.status|title }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {% if project.files %}
+                        {# Images Section #}
+                        <div class="project-images">
+                            <h3 class="images-title">
+                                <i class="fas fa-images"></i>
+                                Project Images
+                            </h3>
+                            <div class="image-gallery">
+                                {% for file in project.files %}
+                                    {% if file.name|lower|slice:"-4:" == ".png" or file.name|lower|slice:"-4:" == ".jpg" or file.name|lower|slice:"-5:" == ".jpeg" or file.name|lower|slice:"-4:" == ".svg" or file.name|lower|slice:"-5:" == ".webp" or file.name|lower|slice:"-4:" == ".gif" %}
+                                        <div class="image-item">
+                                            <img src="{% static file.path %}" alt="{{ file.name }}" class="project-image">
+                                            <p class="image-caption">{{ file.name }}</p>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Videos Section #}
+                        <div class="project-videos">
+                            <h3 class="videos-title">
+                                <i class="fas fa-video"></i>
+                                Project Videos
+                            </h3>
+                            <div class="video-gallery">
+                                {% for file in project.files %}
+                                    {% if file.name|lower|slice:"-4:" == ".mp4" or file.name|lower|slice:"-4:" == ".avi" or file.name|lower|slice:"-4:" == ".mov" %}
+                                        <div class="video-item">
+                                            <video controls class="project-video">
+                                                <source src="{% static file.path %}" type="video/{{ file.name|slice:'-3:' }}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            <p class="video-caption">{{ file.name }}</p>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                      {% endif %}
+                      <div class="project-files">
+                        <h3 class="files-title">
+                          <i class="fas fa-paperclip"></i>
+                          Project Files
+                        </h3>
+                        {% if project.files%}
+                        <div class="file-list">
+                          {% for file in project.files %}
+                          <div class="file-card" data-file-type="{{ file.name|slice:'-3:'|lower }}">
+                            <div class="file-icon-container">
+                              <i class="fas 
+                                {% if '.pdf' in file.name|lower %}fa-file-pdf
+                                {% elif '.doc' in file.name|lower %}fa-file-word
+                                {% elif '.xls' in file.name|lower %}fa-file-excel
+                                {% elif '.zip' in file.name|lower %}fa-file-archive
+                                {% elif '.ppt' in file.name|lower or '.pptx' in file.name|lower or '.pptm' in file.name|lower %}fa-file-powerpoint
+                                {% elif '.mp4' in file.name|lower or '.avi' in file.name|lower %}fa-file-video
+                                {% elif '.mp3' in file.name|lower or '.wav' in file.name|lower %}fa-file-audio
+                                {% elif '.gif' in file.name|lower %}fa-file-image
+                                {% elif '.svg' in file.name|lower %}fa-file-image
+                                {% elif '.webp' in file.name|lower %}fa-file-image
+                                {% elif '.jpeg' in file.name|lower or '.jpg' in file.name|lower %}fa-file-image
+                                {% elif '.jpg' in file.name|lower or '.png' in file.name|lower %}fa-file-image
+                                {% else %}fa-file-alt{% endif %}
+                                file-icon">
+                              </i>
+                            </div>
+                            <div class="file-info">
+                              <div class="file-name" title="{{ file.name }}">{{ file.name|truncatechars:30 }}</div>
+                              <div class="file-meta">
+                                <span class="file-size">{{ file.size|filesizeformat }}</span>
+                                {% if '.pdf' in file.name|lower or '.jpg' in file.name|lower or '.png' in file.name|lower %}
+                                  <span class="file-type">{{ file.name|slice:'-3:'|upper }}</span>
+                                {% else %}
+                                  <span class="file-type">{{ file.name|slice:'-4:'|upper }}</span>
+                                {% endif %}
+                              </div>
+                            </div>
+                            <a href="{% static file.path %}" class="download-btn" download title="Download {{ file.name }}">
+                              <i class="fas fa-download"></i>
+                            </a>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="no-files">
+                          <i class="fas fa-folder-open"></i>
+                          <p>No files uploaded for this project</p>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    
+  </div>
+
+  <!-- Add Project Modal -->
+  <div class="modal-overlay" id="add-project-modal">
+    <div class="add-project-form">
+      <div class="form-header">
+        <h2>Add New Project</h2>
+        <button class="close-btn" id="close-modal-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="project-form" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="required">Name</label>
+            <input type="text" placeholder="Enter your name" id="name" name="name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="required">PB Number</label>
+            <input type="text" placeholder="Enter PB number" id="pb_number" name="pb_number" required>
+          </div>
+
+          <div class="form-group">
+              <label class="required">Division</label>
+              <select id="division" name="division" required>
+                  <option value="">Select Division</option>
+                  <option value="AEROSPACE DIVISION">AEROSPACE DIVISION</option>
+                  <option value="AIRCRAFT">AIRCRAFT</option>
+                  <option value="AIRCRAFT OVERHAUL DIVISION NASIK">AIRCRAFT OVERHAUL DIVISION NASIK</option>
+                  <option value="ARDC">ARDC</option>
+                  <option value="AVIONICS DIVISION,KORWA">AVIONICS DIVISION,KORWA</option>
+                  <option value="BARRACKPORE DIVISION">BARRACKPORE DIVISION</option>
+                  <option value="ENGINE DIVISION">ENGINE DIVISION</option>
+                  <option value="FOUNDRY AND FORGE">FOUNDRY AND FORGE</option>
+                  <option value="HAL TAD KANPUR">HAL TAD KANPUR</option>
+                  <option value="HAL-AERDC">HAL-AERDC</option>
+                  <option value="HELICOPTER">HELICOPTER</option>
+                  <option value="HELICOPTER DIVISION TUMAKURU">HELICOPTER DIVISION TUMAKURU</option>
+                  <option value="HELIMRO">HELIMRO</option>
+                  <option value="HYDERABAD">HYDERABAD</option>
+                  <option value="KORAPUT">KORAPUT</option>
+                  <option value="LCA TEJAS DIVISION">LCA TEJAS DIVISION</option>
+                  <option value="LUCKNOW">LUCKNOW</option>
+                  <option value="MANUFACTURING DIVISION NASIK">MANUFACTURING DIVISION NASIK</option>
+                  <option value="OVERHAUL">OVERHAUL</option>
+              </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required">Project Name</label>
+            <input type="text" placeholder="Enter project name" id="project_name" name="project_name" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="required">Description (500 words)</label>
+            <textarea placeholder="Describe the project in detail..." id="description" name="description" required></textarea>
+          </div>
+
+          <div class="form-group">
+              <label class="required">Project Category</label>
+              <select id="category" name="category" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="AR or VR and Remote Assistance">AR or VR and Remote Assistance</option>
+                  <option value="Automation and Robotics">Automation and Robotics</option>
+                  <option value="Cyber security and IT infrastructure">Cyber security and IT infrastructure</option>
+                  <option value="Data Analytics and Predictive Maintenance">Data Analytics and Predictive Maintenance</option>
+                  <option value="Digitization and Documentation">Digitization and Documentation</option>
+                  <option value="IMM and Supply Chain">IMM and Supply Chain</option>
+                  <option value="IoT and Connectivity">IoT and Connectivity</option>
+                  <option value="Quality Assurance and Smart Inspection">Quality Assurance and Smart Inspection</option>
+              </select>
+          </div>
+
+          <!-- Optional Fields -->
+          <div class="form-group">
+            <label>Project Start Date</label>
+            <input type="date" id="start_date" name="start_date">
+          </div>
+
+          <div class="form-group">
+            <label>Project End Date</label>
+            <input type="date" id="end_date" name="end_date">
+          </div>
+
+          <div class="form-group">
+            <label>Tools Used</label>
+            <input type="text" placeholder="List tools separated by commas" id="tools_used" name="tools_used">
+          </div>
+
+          <div class="form-group full-width">
+            <label>Benefits Accrued</label>
+            <textarea placeholder="Describe the expected benefits..." id="benefits" name="benefits"></textarea>
+          </div>
+
+          <!-- File Upload -->
+          <div class="form-group full-width">
+            <label>Upload Documents</label>
+            <p>Include Project Images and Videos also </p>
+            <div class="file-upload">
+              <div class="file-upload-btn" id="file-upload-area">
+                <div class="file-upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="file-upload-text">Click to upload files</div>
+                <div class="file-upload-hint">Supports PDF, DOCX, JPG, PNG, MP4 (Max 50MB each)</div>
+                <input type="file" class="file-upload-input" id="file-input" name="files" multiple>
+              </div>
+            </div>
+            <div class="file-preview-container" id="file-preview">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-cancel" id="cancel-form-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-submit">Submit Project</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    function filterProjects() {
+        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
+        const categoryFilter = document.getElementById('projectCategoryFilter').value;
+        const divisionFilter = document.getElementById('divisionFilter').value;
+        const tableRows = document.querySelectorAll('.projects-table tbody tr');
+        
+        tableRows.forEach(row => {
+            const projectName = row.querySelector('td:first-child').textContent.toLowerCase();
+            const category = row.querySelector('td:nth-child(3)').textContent;
+            const division = row.querySelector('td:nth-child(4)').textContent;
+            
+            const matchesSearch = projectName.includes(searchInput);
+            const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
+            const matchesDivision = divisionFilter === 'all' || division === divisionFilter;
+            
+            row.style.display = (matchesSearch && matchesCategory && matchesDivision) ? '' : 'none';
+        });
+    }
+
+    // Add event listeners for the filters
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('projectSearchInput').addEventListener('input', filterProjects);
+        document.getElementById('projectCategoryFilter').addEventListener('change', filterProjects);
+        document.getElementById('divisionFilter').addEventListener('change', filterProjects);
+    });
+
+    function filterPenProjects() {
+        const searchInput = document.getElementById('projectSearchInputs').value.toLowerCase();
+        const categoryFilter = document.getElementById('projectCategoryFilters').value;
+        const divisionFilter = document.getElementById('divisionFilters').value;
+        const tableRow = document.querySelectorAll('.projects-table2 tbody tr');
+        
+        tableRow.forEach(row => {
+            const projectName = row.querySelector('td:first-child').textContent.toLowerCase();
+            const category = row.querySelector('td:nth-child(3)').textContent;
+            const division = row.querySelector('td:nth-child(4)').textContent;
+            
+            const matchesSearch = projectName.includes(searchInput);
+            const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
+            const matchesDivision = divisionFilter === 'all' || division === divisionFilter;
+            
+            row.style.display = (matchesSearch && matchesCategory && matchesDivision) ? '' : 'none';
+        });
+    }
+
+    // Add event listeners for the filters
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('projectSearchInputs').addEventListener('input', filterProjects);
+        document.getElementById('projectCategoryFilters').addEventListener('change', filterProjects);
+        document.getElementById('divisionFilters').addEventListener('change', filterProjects);
+    });
+    // Navigation between sections
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // Remove active class from all nav items
+        document.querySelectorAll('.nav-item').forEach(nav => {
+          nav.classList.remove('active');
+        });
+        
+        // Add active class to clicked nav item
+        this.classList.add('active');
+        
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+          section.classList.remove('active');
+        });
+        
+        // Show the corresponding section
+        const sectionId = this.getAttribute('data-section');
+        document.getElementById(sectionId).classList.add('active');
+      });
+    });
+    // Toggle profile dropdown
+    document.getElementById('profileToggle').addEventListener('click', function() {
+        document.getElementById('profileDropdown').classList.toggle('active');
+    });
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#profileToggle')) {
+            document.getElementById('profileDropdown').classList.remove('active');
+        }
+    });
+    // Modal Handling
+    const addProjectBtn = document.getElementById('add-project-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelFormBtn = document.getElementById('cancel-form-btn');
+    const modal = document.getElementById('add-project-modal');
+
+    addProjectBtn.addEventListener('click', () => {
+      modal.classList.add('active');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    cancelFormBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      // Form submission handler
+      document.getElementById('project-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = document.getElementById('project-form');
+        const formData = new FormData(form);
+        const submitBtn = document.querySelector('.btn-submit');
+        Array.from(fileInput.files).forEach((file, index) => {
+            formData.append('files', file);  
+        });
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
+        try {
+          const response = await fetch('/submit-project/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert('Project submitted successfully!');
+            form.reset();
+            document.getElementById('file-preview').innerHTML = '';
+            resetFileUploadArea();
+          } else {
+            throw new Error(result.error || 'Failed to submit project');
+          }
+        } catch (error) {
+          alert('Error: ' + error.message);
+          console.error('Submission error:', error);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Project';
+        }
+      });
+      
+      // File Upload Handling
+      const fileInput = document.getElementById('file-input');
+      const filePreview = document.getElementById('file-preview');
+      const fileUploadArea = document.getElementById('file-upload-area');
+
+        fileInput.addEventListener('change', function() {
+        filePreview.innerHTML = '';
+        
+        if (this.files.length > 0) {
+          fileUploadArea.innerHTML = `
+            <div class="file-upload-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="file-upload-text">${this.files.length} files selected</div>
+            <div class="file-upload-hint">Click to change files</div>
+          `;
+          
+          Array.from(this.files).forEach((file, index) => {
+            if (file.size > 50 * 1024 * 1024) {
+              alert(`File ${file.name} exceeds 50MB limit and will not be uploaded`);
+              return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+              const filePreviewItem = document.createElement('div');
+              filePreviewItem.className = 'file-preview';
+              filePreviewItem.dataset.index = index;
+              
+              let previewContent = '';
+              if (file.type.startsWith('image/')) {
+                previewContent = `<img src="${e.target.result}" alt="${file.name}">`;
+              } else {
+                const fileIcon = getFileIcon(file);
+                previewContent = `<i class="${fileIcon}" style="font-size: 2rem; color: var(--primary); margin-bottom: 8px;"></i>`;
+              }
+              
+              filePreviewItem.innerHTML = `
+                ${previewContent}
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+                <button type="button" class="remove-file" data-index="${index}">
+                  <i class="fas fa-times"></i>
+                </button>
+              `;
+              
+              filePreview.appendChild(filePreviewItem);
+            };
+            
+            reader.readAsDataURL(file);
+          });
+        }
+      });
+
+      // Updated remove file handler
+      filePreview.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-file')) {
+          const index = e.target.closest('.remove-file').dataset.index;
+          const fileItem = document.querySelector(`.file-preview[data-index="${index}"]`);
+          
+          if (fileItem) {
+            fileItem.remove();
+            
+            // Create new DataTransfer to update files
+            const dataTransfer = new DataTransfer();
+            Array.from(fileInput.files).forEach((file, i) => {
+              if (i !== parseInt(index)) {
+                dataTransfer.items.add(file);
+              }
+            });
+            
+            fileInput.files = dataTransfer.files;
+            
+            // Update the count display
+            if (fileInput.files.length === 0) {
+              resetFileUploadArea();
+            } else {
+              fileUploadArea.querySelector('.file-upload-text').textContent = 
+                `${fileInput.files.length} files selected`;
+            }
+          }
+        }
+      });
+
+      function resetFileUploadArea() {
+        fileUploadArea.innerHTML = `
+          <div class="file-upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="file-upload-text">Click to upload files</div>
+          <div class="file-upload-hint">Supports PDF, DOCX, JPG, PNG, MP4 (Max 50MB each)</div>
+        `;
+      }
+
+      function getFileIcon(file) {
+        if (file.type.startsWith('image/')) return 'fas fa-file-image';
+        if (file.type === 'application/pdf') return 'fas fa-file-pdf';
+        if (file.type.includes('word')) return 'fas fa-file-word';
+        if (file.type.includes('excel')) return 'fas fa-file-excel';
+        if (file.type.includes('powerpoint')) return 'fas fa-file-powerpoint';
+        if (file.type.includes('video')) return 'fas fa-file-video';
+        if (file.type.includes('audio')) return 'fas fa-file-audio';
+        if (file.type.includes('zip') || file.type.includes('compressed')) return 'fas fa-file-archive';
+        return 'fas fa-file-alt';
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add click event to all view buttons
+      document.querySelectorAll('.view-project-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const projectId = this.getAttribute('data-project-id');
+          const modal = document.getElementById(`project-modal-${projectId}`);
+          if (modal) {
+            modal.classList.add('show');
+          }
+        });
+      });
+
+      // Add click event to all close buttons
+      document.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', function() {
+          const projectId = this.getAttribute('data-project-id');
+          const modal = document.getElementById(`project-modal-${projectId}`);
+          if (modal) {
+            modal.classList.remove('show');
+          }
+        });
+      });
+
+      // Close modal when clicking outside of it
+      window.addEventListener('click', function(event) {
+        document.querySelectorAll('.project-modal').forEach(modal => {
+          if (event.target === modal) {
+            modal.classList.remove('show');
+          }
+        });
+      });
+    });
+    function handleProjectAction(button, action) {
+        const projectId = button.getAttribute('data-project-id');
+
+        let endpoint = '';
+        if (action === 'approve') {
+            endpoint = "{% url 'approve' %}";
+        } else if (action === 'reject') {
+            endpoint = "{% url 'reject' %}";
+        }
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                project_id: projectId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Optionally update UI or reload
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to process the request.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    function toggleFilter(filterId) {
+      const dropdown = document.getElementById(`${filterId}-filter`);
+      document.querySelectorAll('.filter-dropdown').forEach(dd => {
+        if (dd !== dropdown) dd.classList.remove('show');
+      });
+      dropdown.classList.toggle('show');
+    }
+
+    // Close dropdowns when clicking elsewhere
+    window.addEventListener('click', function(e) {
+      if (!e.target.matches('.filter')) {
+        document.querySelectorAll('.filter-dropdown').forEach(dd => {
+          dd.classList.remove('show');
+        });
+      }
+    });
+
+  </script>
+</body>
+</html>
