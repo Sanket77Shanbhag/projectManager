@@ -2,7 +2,7 @@
 
 ```bash
 git clone https://github.com/Sanket77Shanbhag/projectManager.git
-cd project-manager
+cd projectManager
 ```
 
 ```bash
